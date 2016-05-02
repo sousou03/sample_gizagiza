@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title></title>
+<link href="./common/css/style.css" rel="stylesheet"> 
+</head>
+<body>
+
+
+
+<!-- Scripts Start -->
+<script type="text/javascript" src="./common/js/jquery.js"></script>
+<script type="text/javascript" src="./common/js/setup.js"></script>
+<script type="text/javascript" src="./common/js/parameter.js"></script>
+<script type="text/javascript">
+
+$(function(){
+
+    var canvas,ctx,
+
+        mx,my,
+        radius = 0,
+
+        FPS = 1000/30,
+        Timer;
+
+    var curR = 0;
+    var easing = 0.08;
+    var targetR_click = 0;
+    var t = 0;
+
+    var img;
+
+    var isReverse = true;
+
+    var imgList = {
+      'top':'./common/img/city.jpg',
+      '2':'./common/img/sky.jpg',
+      '3':'./common/img/boy.jpg',
+    };
+
+    function setup() {
+
+      // canvas要素追加
+      var dom = '<canvas id="cv"></canvas>';
+      $('body').append(dom);
+
+      // canvas api取得
+      canvas = document.getElementById("cv");
+      ctx = canvas.getContext("2d");   
+
+      // setCanvasSize();
+
+    }
+
+    function setImg() {
+
+        // instance
+        img = new Image();
+
+        // load
+        img.onload = function() {
+            imgOnLoad();
+        }
+        // set
+        img.src = imgList[2];
+
+    }
+
+    function imgOnLoad() {
+
+      var ratioC,ratio;
+      var sx,sy,sw,sh,dx,dy,dw,dh;
+
+      sw = img.width;
+      sh = img.height;
+
+      canvas.width = sw / 2;
+      canvas.height = sh / 2;
+
+      console.log(sw,sh,sh/sw);
+
+      dw = canvas.width;
+      dh = canvas.height;
+
+      ratioC = dh / dw;
+      ratio = sh / sw;
+
+      // 横長
+      if (ratioC > ratio) {
+          
+          ctx.scale(dh / sh, dh / sh);
+
+
+          tempSW = img.width * (dh / sh);
+
+          // ctx.drawImage(img, - (tempSW - dw)/2, 0, sh, sw);
+          ctx.drawImage(img, 0, 0, sw, sh , - (tempSW - dw)/2, 0, sw, sh);
+
+          ctx.scale(1/(dh / sh),1/(dh / sh));
+
+
+      // 縦長
+      } else if ( ratioC <= ratio) {
+
+          ctx.scale(dw / sw, dw / sw);
+
+          tempSH = img.height * (dw / sw);
+
+          ctx.drawImage(img, 0, 0, sw, sh , 0, - (tempSH - dh)/2, sw, sh);
+
+          ctx.scale(1/(dw / sw),1/(dw / sw));
+
+
+      }
+
+
+    }
+
+    function setStyle() {
+
+        var $target = $('#cv');
+
+        $target.css({
+            position: 'absolute',
+            left: '0',
+            top: '0',
+        });
+
+    }
+
+    function setCanvasSize() {
+      canvas.width = $(window).width();
+      canvas.height = $(window).height();
+    }
+
+    var step = 0;
+
+    function update() {
+
+      var targetR = 0;
+
+      // ctx.globalAlpha = 1;
+
+      if (isReverse) {
+          // ctx.globalAlpha -= 0.018;
+          curR += t * t * t * t;
+          t += 0.07;
+
+      } else {
+          // ctx.globalAlpha += 0.008;
+          curR += (targetR - curR) * easing;
+          t = 0;
+
+      }
+
+      if (Math.pow(Math.sin(step),3) > 0) isReverse = false;
+      else isReverse = true
+
+      step += 0.07;
+
+    }
+
+    function draw() {
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // layout
+        var ratioC,ratio;
+        var sx,sy,sw,sh,dx,dy,dw,dh;
+
+        sw = img.width;
+        sh = img.height;
+
+        dw = canvas.width;
+        dh = canvas.height;
+
+        ratioC = dh / dw;
+        ratio = sh / sw;
+
+        // layout
+
+        // 横長
+        // if (ratioC > ratio) {
+            
+            ctx.scale(dh / sh, dh / sh);
+
+            tempSW = img.width * (dh / sh);
+            // sh = sh * (dh / sh);
+
+            // 1pxずつずらして描画
+            var cnt = 0
+            for (var i = 0; i < sh; i += 0.5) {
+
+                randomPos = Math.floor(Math.random()*curR);
+
+                if (i % 2 == 0) randomPos *= -1;
+                if (i % 2 == 1) randomPos *= 1;
+
+                ctx.drawImage(img, 0, cnt, sw ,1, randomPos - (tempSW - dw)/2 + 300, i + 100, sw / 2, 0.5);
+                cnt++
+
+            }    
+
+            // var cnt = 0
+            // for (var i = 0; i < sh; i += 1) {
+
+            //     randomPos = Math.floor(Math.random()*curR);
+
+            //     if (i % 2 == 0) randomPos *= -1;
+            //     if (i % 2 == 1) randomPos *= 1;
+
+            //     // ctx.drawImage(img, 0, i, sw ,1, 800 + randomPos - (tempSW - dw)/2, i + 50, sw - 800, 1);
+            //     ctx.drawImage(img, 0, i, sw ,1, 0 + 200, i, sw, 1);
+            //     cnt++
+            // }    
+
+            //変形マトリックスをもとに戻す
+            ctx.scale( 1/(dh / sh), 1/(dh / sh));
+
+
+        // // 縦長
+        // } else if ( ratioC <= ratio) {
+
+
+        //     ctx.scale(dw / sw, dw / sw);
+
+        //     tempSH = img.height * (dw / sw);
+
+        //     // 1pxずつずらして描画
+        //     for (var i = 0; i < sh; i++) {
+
+        //         randomPos = Math.floor(Math.random()*curR);
+
+        //         if (i % 2 == 0) randomPos *= -1;
+        //         if (i % 2 == 1) randomPos *= 1;
+
+        //         ctx.drawImage(img, 0, i, sw ,10, randomPos, i - (tempSH - dh)/2, sw, 10);
+
+        //     }            
+
+
+        //     //変形マトリックスをもとに戻す
+        //     ctx.scale( 1/(dw / sw), 1/(dw / sw));
+
+
+        // }
+
+
+
+        // // 1pxずつずらして描画
+        // for (var i = 0; i < canvas.height; i++) {
+
+        //     randomPos = Math.floor(Math.random()*curR);
+
+        //     if (i % 2 == 0) randomPos *= -1;
+        //     if (i % 2 == 1) randomPos *= 1;
+
+        //     ctx.drawImage(img, 0, i, canvas.width, 1, randomPos, i, canvas.width, 1);
+        // }
+
+    }
+
+    function loop() {
+
+      update();
+      draw();
+
+      Timer = requestAnimationFrame(loop);
+
+    }
+
+    function stop() {
+
+      cancelAnimationFrame(Timer);
+
+    }
+
+    function resizeHandler() {
+
+      setCanvasSize();
+
+    }
+
+    function setEvents() {
+
+      $(window).on('resize', resizeHandler);
+
+    }
+
+    function main() {
+
+      setEvents();
+
+      // ready
+      setup();
+      // setCanvasSize();
+      setImg();
+      setStyle();
+      loop();
+
+    }
+
+    main();
+
+});
+
+
+</script>
+</body>
+</html>
